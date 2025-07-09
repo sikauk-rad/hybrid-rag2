@@ -5,7 +5,6 @@ from .utilities import (
     add_token_count,
     add_token_counts,
     get_allowed_history,
-    hash_repr_deterministic,
 )
 from .loaders import (
     load_tokeniser, 
@@ -40,7 +39,6 @@ __all__ = [
     'add_token_count',
     'add_token_counts',
     'get_allowed_history',
-    'hash_repr_deterministic',
 
     'load_openai_clients',
     'load_azure_clients',
