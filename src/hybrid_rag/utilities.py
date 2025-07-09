@@ -31,17 +31,6 @@ def check_all_arguments_are_none_or_not(
 
 
 @beartype
-def hash_repr_deterministic(
-   string: str_or_None,
-) -> str_or_None:
-
-   if object is None:
-      return None
-   else:
-      return sha256(f'{object}'.encode('utf-8')).hexdigest()
-
-
-@beartype
 def get_optimal_uintype(
     number: Number,
 ) -> Literal['uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64']:
