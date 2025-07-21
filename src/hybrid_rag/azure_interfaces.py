@@ -198,16 +198,16 @@ class AzureChatModelInterface(ChatModelInterface):
 
     def trim(
         self,
-        messages: Sequence[AzureMessageType],
+        messages: Sequence[AzureMessageCountType],
         message_preservation_indices: Sequence[int] | None = None,
         custom_token_limit: int | None = None,
-    ) -> list[AzureMessageType]:
+    ) -> list[AzureMessageCountType]:
 
-            return get_allowed_history(
-                messages,
-                message_preservation_indices = message_preservation_indices,
-                token_limit = self.token_input_limit if custom_token_limit is None else custom_token_limit,
-            )
+        return get_allowed_history(
+            messages,
+            message_preservation_indices = message_preservation_indices,
+            token_limit = self.token_input_limit if custom_token_limit is None else custom_token_limit,
+        )
 
 
     def respond(
@@ -385,7 +385,7 @@ class TestEmbeddingModelInterface(EmbeddingModelInterface):
         text: str
     ) -> NDArray[np.float64]:
 
-        return self.rng.uniform(100, dtype = 'float64')
+        return self.rng.uniform(low = 0, high = 1, size = 100, dtype = 'float64')
 
 
     async def atransform(
@@ -401,7 +401,7 @@ class TestEmbeddingModelInterface(EmbeddingModelInterface):
         texts: Sequence[str],
     ) -> NDArray[np.float64]:
 
-        return self.rng.uniform((len(texts), 100), dtype = 'float64')
+        return self.rng.uniform(low = 0, high = 1, size = (len(texts), 100), dtype = 'float64')
 
 
     async def atransform_multiple(
@@ -430,19 +430,25 @@ class TestChatModelInterface(ChatModelInterface):
 
     def respond(
         self,
-        text: str,
+        messages: Sequence[AzureMessageType | AzureMessageCountType],
+        return_token_count: bool = False,
         *args,
         **kwargs,
-    ) -> str:
+    ) -> str | tuple[str, int]:
 
-        return text
+        message = messages[-1]['content']
+        if return_token_count:
+            return (message, 1)
+        else:
+            return message
 
 
     async def arespond(
         self,
-        text: str,
+        messages: Sequence[AzureMessageType | AzureMessageCountType],
+        return_token_count: bool = False,
         *args,
         **kwargs,
     ) -> str:
 
-        return text
+        return self.respond(messages=messages, return_token_count=return_token_count,*args, **kwargs)

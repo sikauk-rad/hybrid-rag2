@@ -22,7 +22,6 @@ dependencies = [
   "nltk",
   "tokenizers",
   "scipy>=1.14.0",
-  "bm25s",
   "PyStemmer==2.2.0.1",
   "pydantic>=2.7.0"
 ]

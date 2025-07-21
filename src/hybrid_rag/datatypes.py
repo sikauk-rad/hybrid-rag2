@@ -113,12 +113,12 @@ class AzureCrossEncoderModelDetails(BaseAzureModelDetails):
     function: Literal['cross-encoder'] = 'cross-encoder'
 
 
+class AzureMessageType(TypedDict, total = True):
+    role: Role
+    content: str
+
+
 class AzureMessageCountType(TypedDict, total = True):
     role: Role
     content: str
     tokens: int
-
-
-class AzureMessageType(TypedDict, total = True):
-    role: Role
-    content: str

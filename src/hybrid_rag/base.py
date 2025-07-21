@@ -176,7 +176,7 @@ class TokeniserInterface(ABC):
     @abstractmethod
     def tokeniser_id(
         self,
-    ) -> Hashable:
+    ) -> str:
         ...
 
     def __hash__(
