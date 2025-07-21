@@ -179,6 +179,16 @@ class TokeniserInterface(ABC):
     ) -> str:
         ...
 
+    def __eq__(
+        self,
+        other,
+    ) -> bool:
+
+        if not isinstance(other, TokeniserInterface):
+            return NotImplemented
+        else:
+            return self.tokeniser_id == other.tokeniser_id
+
     def __hash__(
         self,
     ) -> int:

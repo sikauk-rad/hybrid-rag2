@@ -75,17 +75,6 @@ class OpenAITokeniserInterface(TokeniserInterface):
         return [*map(len, self.tokeniser.encode_batch(texts))]
 
 
-    def __eq__(
-        self,
-        other: Any,
-    ) -> bool:
-
-        if isinstance(other, OpenAITokeniserInterface):
-            return self.encoding == other.encoding
-        else:
-            return False
-
-
 @beartype
 class HuggingFaceTokeniserInterface(TokeniserInterface):
 
@@ -144,17 +133,6 @@ class HuggingFaceTokeniserInterface(TokeniserInterface):
     ) -> list[int]:
 
         return [len(self.tokeniser.encode(text)) for text in texts]
-
-
-    def __eq__(
-        self,
-        other: Any,
-    ) -> bool:
-
-        if isinstance(other, HuggingFaceTokeniserInterface):
-            return self.model_id == other.model_id
-        else:
-            return False
 
 
 @beartype
