@@ -1,15 +1,16 @@
-from pathlib import Path
-import polars as pl
-import numpy as np
-import orjson as json
-from typing import Self
-from beartype import beartype
 from collections.abc import Iterable, Sequence
-from sklearn.metrics.pairwise import cosine_similarity
-from numbers import Number
 from dataclasses import dataclass
-from numpy.typing import NDArray
+from pathlib import Path
+from typing import Self
+
+from beartype import beartype
 from cachetools import LFUCache
+import numpy as np
+from numpy.typing import NDArray
+import orjson as json
+import polars as pl
+from sklearn.metrics.pairwise import cosine_similarity
+
 from ..base import TextTransformer, EmbeddingModelInterface
 from ..exceptions import SizeError
 
@@ -255,7 +256,7 @@ class TextEmbedder(TextTransformer):
         n_retries: int = 100,
         save_path: Path | None = None,
         fail_on_overwrite: bool = True,
-        precomputed_embeddings: Iterable[Iterable[Number]] | None = None,
+        precomputed_embeddings: Sequence[Sequence[int | float]] | None = None,
     ) -> Self:
 
         self.fit_transform(
@@ -377,7 +378,7 @@ class TextEmbedder(TextTransformer):
         text: str,
         n_retries: int = 100,
         document_indices: list[int] | NDArray[np.integer] | None = None,
-        documents: Iterable[Iterable[Number]] | None = None,
+        documents: Sequence[Sequence[float]] | None = None,
     ) -> NDArray[np.floating]:
 
         embedding = self.transform(
@@ -400,7 +401,7 @@ class TextEmbedder(TextTransformer):
         text: str,
         n_retries: int = 100,
         document_indices: list[int] | NDArray[np.integer] | None = None,
-        documents: Iterable[Iterable[Number]] | None = None,
+        documents: Sequence[Sequence[float]] | None = None,
     ) -> NDArray[np.floating]:
 
         embedding = await self.atransform(

@@ -1,16 +1,18 @@
-from warnings import simplefilter
-simplefilter(action='ignore', category=FutureWarning)
-import polars as pl
-import numpy as np
-from typing import Any
-from beartype import beartype
-from collections.abc import Iterable, Sequence
 from asyncio import gather
-from numbers import Number
+from collections.abc import Iterable, Sequence
+from typing import Any
+from warnings import simplefilter
+
+from beartype import beartype
+import numpy as np
 from numpy.typing import NDArray
+import polars as pl
 from polars.exceptions import ColumnNotFoundError
+
 from .base import TextTransformer
 from .exceptions import SizeError
+
+simplefilter(action='ignore', category=FutureWarning)
 
 
 @beartype
@@ -22,10 +24,10 @@ class DocumentScorer:
         document_sizes: Sequence[int] | NDArray[np.integer],
         transformers: dict[str, TextTransformer],
         *,
-        rank_weights: dict[str, Number] = {},
+        rank_weights: dict[str, int | float] = {},
         transform_arguments: dict[str, dict[str, Any]] = {},
         score_arguments: dict[str, dict[str, Any]] = {},
-        metadata: dict[str, Sequence[str | Number]] = {},
+        metadata: dict[str, Sequence[str | int | float]] = {},
         reranker_name: str = 'ms-marco-MiniLM-L-6-v2',
     ) -> None:
 
@@ -100,7 +102,7 @@ class DocumentScorer:
     def transform_query(
         self,
         query: str,
-    ) -> dict[str, list[list[float]] | NDArray[np.floating]]:
+    ) -> dict[str, list[float | int] | NDArray[np.floating]]:
         
         return {column_name: text_transformer.transform(
             query, 
@@ -111,7 +113,7 @@ class DocumentScorer:
     async def atransform_query(
         self,
         query: str,
-    ) -> dict[str, list[list[float]] | NDArray[np.floating]]:
+    ) -> dict[str, list[float | int] | NDArray[np.floating]]:
         
         return dict(zip(
             self.transformers.keys(),
@@ -127,7 +129,7 @@ class DocumentScorer:
     def _calculate_weighted_score(
         self,
         score_table: pl.DataFrame,
-        fusion_factor: Number,
+        fusion_factor: int | float,
     ) -> pl.DataFrame:
 
         rank_table = score_table.with_columns(
@@ -189,7 +191,7 @@ class DocumentScorer:
     def score_documents(
         self,
         query: str,
-        fusion_factor: Number,
+        fusion_factor: int | float,
         filters: Iterable[pl.Expr] = [],
     ) -> pl.DataFrame:
 
@@ -224,7 +226,7 @@ class DocumentScorer:
     async def ascore_documents(
         self,
         query: str,
-        fusion_factor: Number,
+        fusion_factor: int | float,
         filters: Iterable[pl.Expr] = [],
     ) -> pl.DataFrame:
 
@@ -273,7 +275,7 @@ class DocumentScorer:
         self,
         query: str,
         document_frame: pl.DataFrame,
-        rerank_score_threshold: Number,
+        rerank_score_threshold: int | float,
     ) -> pl.DataFrame:
 
         return document_frame.with_columns(
@@ -294,13 +296,13 @@ class DocumentScorer:
         self,
         query: str,
         k: int,
-        content_size_limit: Number,
+        content_size_limit: int | float,
         filters: Iterable[pl.Expr] = [],
-        k_multiplier: Number = 2.,
-        weighted_rank_threshold: Number = 0.,
-        fusion_factor: Number = 1,
+        k_multiplier: int | float = 2.,
+        weighted_rank_threshold: int | float = 0.,
+        fusion_factor: int | float = 1,
         rerank: bool = True,
-        rerank_score_threshold: Number = -np.inf,
+        rerank_score_threshold: int | float = -np.inf,
         verbose: bool = False,
     ) -> pl.DataFrame:
 
@@ -338,13 +340,13 @@ class DocumentScorer:
         self,
         query: str,
         k: int,
-        content_size_limit: Number,
+        content_size_limit: int | float,
         filters: Iterable[pl.Expr] = [],
-        k_multiplier: Number = 2.,
-        weighted_rank_threshold: Number = 0.,
-        fusion_factor: Number = 1,
+        k_multiplier: int | float = 2.,
+        weighted_rank_threshold: int | float = 0.,
+        fusion_factor: int | float = 1,
         rerank: bool = True,
-        rerank_score_threshold: Number = -np.inf,
+        rerank_score_threshold: int | float = -np.inf,
         verbose: bool = False,
     ) -> pl.DataFrame:
 

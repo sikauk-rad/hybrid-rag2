@@ -1,80 +1,112 @@
-from typing import Literal, Self, TypedDict
-from datetime import date, datetime
-from pydantic import BaseModel, ConfigDict
-from pydantic_core import from_json
-from abc import ABC
+from collections.abc import Iterable
+from datetime import date
 from enum import Enum
+from typing import Literal, Self
+
+import msgspec
 
 
-class Role(str, Enum):
-    SYSTEM = 'system'
-    ASSISTANT = 'assistant'
-    USER = 'user'
+class ModelFunction(str, Enum):
+    CHAT = 'chat'
+    EMBEDDING = 'embedding'
+    CROSS_ENCODER = 'cross-encoder'
 
 
-class BaseAzureModelDetails(ABC, BaseModel):
+class BaseAzureModelDetails(msgspec.Struct, kw_only = True):
 
-    model_config = ConfigDict(
-        extra = 'allow',
-        frozen = True,
-        use_enum_values = True,
-        validate_assignment = True,
-        strict = True,
-        protected_namespaces = (),
-    )
-
+    _registry = {}
     model_name: str
     base_model_name: str
-    model_version: str | None
+    tokeniser: str
+    tokeniser_type: Literal['tiktoken', 'HuggingFace']
+    token_input_limit: int
     azure_endpoint: str
     azure_version: str
     api_key: str
-    function: Literal['chat', 'embedding', 'cross-encoding', 'reasoning']
+    function: ModelFunction
+
+    @classmethod
+    def register(cls, function: ModelFunction):
+        def decorator(subclass):
+            cls._registry[function] = subclass
+            return subclass
+        return decorator
 
 
     @classmethod
-    def from_json(
+    def from_dict_factory(
         cls,
-        json_string: str,
+        model_details: dict,
     ) -> Self:
 
-        model_dict = from_json(
-            data = json_string,
-        )
-        return cls.from_dict(model_dict)
+        if cls is not BaseAzureModelDetails:
+            raise TypeError('from_dict_factory should only be called from the base class.')
+        function = model_details.get('function')
+        if function is None:
+            raise KeyError('model_details does not contain function key.')
+        try:
+            model_function = ModelFunction(function)
+        except ValueError:
+            raise KeyError(f'model function {function} not a valid ModelFunction enum.')
+        model_cls = cls._registry.get(function)
+        if not model_cls:
+            raise KeyError('model function not registered with BaseAzureModelDetails.')
+        return model_cls.from_dict(model_details)
 
 
     @classmethod
     def from_dict(
         cls,
-        model_dict: dict,
+        dict: dict,
     ) -> Self:
 
-        if isinstance(model_dict.get('knowledge_cutoff_date'), str):
-            model_dict = model_dict | {
-                'knowledge_cutoff_date': datetime.fromisoformat(
-                    model_dict['knowledge_cutoff_date']
-                ),
-            }
-        return cls(**model_dict)
+        return msgspec.convert(
+            obj = dict,
+            type = cls,
+        )
+
+
+    @classmethod
+    def from_dicts(
+        cls,
+        dicts: Iterable[dict],
+    ) -> list[Self]:
+
+        return msgspec.convert(
+            obj = [*dicts],
+            type = list[cls],
+        )
+
+
+    @classmethod
+    def from_json(
+        cls,
+        json: bytes | str,
+        multiple: bool = False,
+    ) -> Self | list[Self]:
+
+        return msgspec.json.decode(
+            json, 
+            type = list[cls] if multiple else cls,
+        )
 
 
     def to_json(
         self,
-    ) -> str:
+    ) -> bytes:
 
-        return self.model_dump_json(
-            indent = None,
-            exclude = None,
-            exclude_defaults = False,
-            exclude_none = False,
-        )
+        return msgspec.json.encode(self)
 
 
-class AzureChatModelDetails(BaseAzureModelDetails):
+@BaseAzureModelDetails.register(function=ModelFunction.CHAT)
+class AzureChatModelDetails(
+    BaseAzureModelDetails, 
+    kw_only = True,
+    frozen = True,
+):
     model_name: str
     base_model_name: str
-    knowledge_cutoff_date: date | datetime | None
+    knowledge_cutoff_date: date | None
     model_version: str | None
     tokeniser: str
     tokeniser_type: Literal['tiktoken', 'HuggingFace']
@@ -84,10 +116,24 @@ class AzureChatModelDetails(BaseAzureModelDetails):
     azure_version: str
     api_key: str
     supports_structured: bool | None
-    function: Literal['chat'] = 'chat'
+
+    def __post_init__(
+        self,
+    ) -> None:
+
+        msgspec.structs.force_setattr(
+            self,
+            'function',
+            ModelFunction.CHAT,
+        )
 
 
-class AzureEmbeddingModelDetails(BaseAzureModelDetails):
+@BaseAzureModelDetails.register(function=ModelFunction.EMBEDDING)
+class AzureEmbeddingModelDetails(
+    BaseAzureModelDetails, 
+    kw_only = True,
+    frozen = True,
+):
     model_name: str
     base_model_name: str
     model_version: str | None
@@ -97,10 +143,24 @@ class AzureEmbeddingModelDetails(BaseAzureModelDetails):
     azure_endpoint: str
     azure_version: str
     api_key: str
-    function: Literal['embedding'] = 'embedding'
+
+    def __post_init__(
+        self,
+    ) -> None:
+
+        msgspec.structs.force_setattr(
+            self,
+            'function',
+            ModelFunction.EMBEDDING,
+        )
 
 
-class AzureCrossEncoderModelDetails(BaseAzureModelDetails):
+@BaseAzureModelDetails.register(function=ModelFunction.CROSS_ENCODER)
+class AzureCrossEncoderModelDetails(
+    BaseAzureModelDetails, 
+    kw_only = True,
+    frozen = True,
+):
     model_name: str
     base_model_name: str
     model_version: str | None
@@ -110,15 +170,13 @@ class AzureCrossEncoderModelDetails(BaseAzureModelDetails):
     azure_endpoint: str
     azure_version: str
     api_key: str
-    function: Literal['cross-encoder'] = 'cross-encoder'
 
+    def __post_init__(
+        self,
+    ) -> None:
 
-class AzureMessageType(TypedDict, total = True):
-    role: Role
-    content: str
-
-
-class AzureMessageCountType(TypedDict, total = True):
-    role: Role
-    content: str
-    tokens: int
+        msgspec.structs.force_setattr(
+            self,
+            'function',
+            ModelFunction.CROSS_ENCODER,
+        )

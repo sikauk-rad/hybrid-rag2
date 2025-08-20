@@ -1,26 +1,26 @@
-import polars as pl
-import numpy as np
-import operator as op
-from typing import Literal, Self
-from beartype import beartype
-from collections.abc import Iterable, Sequence
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from numbers import Number
-from numpy.typing import NDArray
 from collections import Counter
-from nltk.corpus import stopwords
-# from sklearn.feature_extraction.text import CountVectorizer
-import re
+from collections.abc import Iterable, Sequence
+import operator as op
 from pathlib import Path
+import re
+from typing import Literal, Self
+
+from beartype import beartype
+# import bm25s
+from llm_utilities.utilities import check_all_arguments_are_none_or_not, get_optimal_uintype
+import orjson as json
+from nltk.corpus import stopwords
+import numpy as np
+from numpy.typing import NDArray
+import polars as pl
+from scipy.sparse import csr_array, sparray, coo_array, save_npz, load_npz#, lil_array
+from sklearn.feature_extraction.text import TfidfVectorizer#, CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from Stemmer import Stemmer
 from tokenizers.normalizers import NFKD, StripAccents
 from tokenizers.normalizers import Sequence as Normaliser
-from Stemmer import Stemmer
-from scipy.sparse import csr_array, sparray, coo_array, save_npz, load_npz#, lil_array
-# import bm25s
+
 from ..base import TextTransformer
-from ..utilities import check_all_arguments_are_none_or_not, get_optimal_uintype
-import orjson as json
 
 
 @beartype
@@ -120,7 +120,7 @@ class TextTDFIF(TextTransformer):
         self,
         text: str,
         document_indices: list[int] | NDArray[np.integer] | None = None,
-        documents: Iterable[Iterable[Number]] | None = None,
+        documents: Iterable[Iterable[int | float]] | None = None,
     ) -> NDArray[np.floating]:
 
         keywords = self.transform(text)
@@ -138,7 +138,7 @@ class TextTDFIF(TextTransformer):
         self,
         text: str,
         document_indices: list[int] | NDArray[np.integer] | None = None,
-        documents: Iterable[Iterable[Number]] | None = None,
+        documents: Iterable[Iterable[int | float]] | None = None,
     ) -> NDArray[np.floating]:
 
         return self.score(
@@ -216,8 +216,8 @@ class TextTDFIF(TextTransformer):
 #             'turkish'
 #         ] = 'english',
 #         method: Literal['robertson', 'lucene', 'atire'] = 'lucene',
-#         k1: Number = 1.5, 
-#         b: Number = 0.75,
+#         k1: int | float = 1.5, 
+#         b: int | float = 0.75,
 #         sparse: bool = True,
 #     ) -> None:
 
@@ -451,8 +451,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -474,8 +474,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -496,8 +496,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -515,9 +515,9 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
-#         delta: Number,
+#         k1: int | float,
+#         b: int | float,
+#         delta: int | float,
 #     ) -> NDArray[np.floating]:
 
 #         raise NotImplementedError('not yet finished.')
@@ -534,9 +534,9 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
-#         delta: Number,
+#         k1: int | float,
+#         b: int | float,
+#         delta: int | float,
 #     ) -> NDArray[np.floating]:
 
 #         raise NotImplementedError('not yet finished.')
@@ -690,8 +690,8 @@ class TextTDFIF(TextTransformer):
 #         lowercase: bool = True,
 #         find_pattern: str = r"(?u)\b\w\w+\b",
 #         method: Literal['robertson', 'lucene', 'atire'] = 'lucene',
-#         k1: Number = 1.5, 
-#         b: Number = 0.75,
+#         k1: int | float = 1.5, 
+#         b: int | float = 0.75,
 #     ) -> None:
 
 #         self.stemmer = Stemmer(stemming_language) if stemming_language else None
@@ -747,8 +747,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -770,8 +770,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -792,8 +792,8 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
+#         k1: int | float,
+#         b: int | float,
 #         **kwargs,
 #     ) -> NDArray[np.floating] | coo_array:
 
@@ -811,9 +811,9 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
-#         delta: Number,
+#         k1: int | float,
+#         b: int | float,
+#         delta: int | float,
 #     ) -> NDArray[np.floating]:
 
 #         raise NotImplementedError('not yet finished.')
@@ -830,9 +830,9 @@ class TextTDFIF(TextTransformer):
 #         document_frequencies: NDArray[np.integer],
 #         document_lengths: NDArray[np.floating],
 #         n_documents: int, 
-#         k1: Number,
-#         b: Number,
-#         delta: Number,
+#         k1: int | float,
+#         b: int | float,
+#         delta: int | float,
 #     ) -> NDArray[np.floating]:
 
 #         raise NotImplementedError('not yet finished.')
@@ -1078,8 +1078,8 @@ class TextBM25(TextTransformer):
         strip_accents: bool = True,
         find_pattern: str = r"(?u)\b\w\w+\b",
         method: Literal['robertson', 'lucene', 'atire'] = 'lucene',
-        k1: Number = 1.5, 
-        b: Number = 0.75,
+        k1: int | float = 1.5, 
+        b: int | float = 0.75,
         stem_stop_words: bool = True,
     ) -> None:
 
@@ -1133,8 +1133,8 @@ class TextBM25(TextTransformer):
         document_frequencies: NDArray[np.integer],
         document_lengths: NDArray[np.floating],
         n_documents: int, 
-        k1: Number,
-        b: Number,
+        k1: int | float,
+        b: int | float,
         **kwargs,
     ) -> NDArray[np.floating] | coo_array:
 
@@ -1156,8 +1156,8 @@ class TextBM25(TextTransformer):
         document_frequencies: NDArray[np.integer],
         document_lengths: NDArray[np.floating],
         n_documents: int, 
-        k1: Number,
-        b: Number,
+        k1: int | float,
+        b: int | float,
         **kwargs,
     ) -> NDArray[np.floating] | coo_array:
 
@@ -1178,8 +1178,8 @@ class TextBM25(TextTransformer):
         document_frequencies: NDArray[np.integer],
         document_lengths: NDArray[np.floating],
         n_documents: int, 
-        k1: Number,
-        b: Number,
+        k1: int | float,
+        b: int | float,
         **kwargs,
     ) -> NDArray[np.floating] | coo_array:
 
@@ -1197,9 +1197,9 @@ class TextBM25(TextTransformer):
         document_frequencies: NDArray[np.integer],
         document_lengths: NDArray[np.floating],
         n_documents: int, 
-        k1: Number,
-        b: Number,
-        delta: Number,
+        k1: int | float,
+        b: int | float,
+        delta: int | float,
     ) -> NDArray[np.floating]:
 
         raise NotImplementedError('not yet finished.')
@@ -1216,9 +1216,9 @@ class TextBM25(TextTransformer):
         document_frequencies: NDArray[np.integer],
         document_lengths: NDArray[np.floating],
         n_documents: int, 
-        k1: Number,
-        b: Number,
-        delta: Number,
+        k1: int | float,
+        b: int | float,
+        delta: int | float,
     ) -> NDArray[np.floating]:
 
         raise NotImplementedError('not yet finished.')

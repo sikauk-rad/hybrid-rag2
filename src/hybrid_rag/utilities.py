@@ -1,71 +1,14 @@
-from beartype import beartype
-from .datatypes import AzureMessageCountType, AzureMessageType
-from .base import TokeniserInterface
+
+from collections.abc import Sequence
 from operator import itemgetter
-import numpy as np
 from warnings import warn
-from collections.abc import Sequence, Iterable
-from numbers import Number
-from typing import Literal, TypeVar
-from hashlib import sha256
 
-str_or_None = TypeVar("T", bound= str | None)
+from beartype import beartype
+from llm_utilities.datatypes import AzureMessageCountType, AzureMessageType
+from llm_utilities.utilities import strip_token_counts
+import numpy as np
 
-
-def check_all_arguments_are_none_or_not(
-    *args,
-) -> bool:
-
-    """
-    Check if all provided arguments are either None or not None.
-
-    Args:
-        *args: A variable number of arguments to check.
-
-    Returns:
-        bool: True if all arguments are None or all are not None; False otherwise.
-    """
-
-    all_none = [arg is None for arg in args]
-    return not (any(all_none) and (not all(all_none)))
-
-
-@beartype
-def get_optimal_uintype(
-    number: Number,
-) -> Literal['uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64']:
-
-    if number < 255:
-        return 'uint8'
-    elif number < 65535:
-        return 'uint16'
-    elif number < 4294967295:
-        return 'uint32'
-    elif number < 18446744073709551615:
-        return 'uint64'
-    elif number <= 3.4028235e+38:
-        return 'float32'
-    else:
-        return 'float64'
-
-
-@beartype
-def strip_token_count(
-    message: AzureMessageCountType,
-) -> AzureMessageType:
-
-    return {key: value for key, value in message.items() if key != 'tokens'}
-
-
-@beartype
-def strip_token_counts(
-    messages: Iterable[AzureMessageCountType],
-) -> list[AzureMessageType]:
-
-    return [{
-        'role': message['role'], 
-        'content': message['content'],
-    } for message in messages]
+from .base import TokeniserInterface
 
 
 @beartype
@@ -75,7 +18,11 @@ def add_token_count(
 ) -> AzureMessageCountType:
 
     token_count = tokeniser.get_token_length(message['content'])
-    return message | {'tokens': token_count}
+    return AzureMessageCountType(
+        role = message['role'],
+        content = message['content'],
+        tokens = token_count,
+    )
 
 
 @beartype
@@ -85,9 +32,14 @@ def add_token_counts(
 ) -> list[AzureMessageCountType]:
 
     token_counts = tokeniser.get_token_lengths([*map(itemgetter('content'), messages)])
-    return [message | {'tokens': token_count} for message, token_count in zip(
+    return [AzureMessageCountType(
+        role = message['role'],
+        content = message['content'],
+        tokens = token_count,
+    ) for message, token_count in zip(
         messages,
         token_counts,
+        strict = True,
     )]
 
 
@@ -97,7 +49,7 @@ def get_allowed_history(
     token_limit: int,
     strip_counts: bool = True,
     message_preservation_indices: Sequence[int] | None = None,
-) -> list[AzureMessageCountType]:
+) -> list[AzureMessageCountType] | list[AzureMessageType]:
 
     """
     Retrieve a list of messages that fit within a specified token limit.
@@ -112,7 +64,7 @@ def get_allowed_history(
     """
 
     if not messages:
-        return messages
+        return []
 
     n_messages = len(messages)
     token_counts = np.fromiter(

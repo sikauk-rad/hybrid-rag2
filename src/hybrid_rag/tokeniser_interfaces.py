@@ -1,17 +1,12 @@
-from tiktoken import get_encoding
-from typing import Literal, Any
+from collections.abc import Sequence
+from typing import Literal
+
 from beartype import beartype
 import numpy as np
-from collections.abc import Sequence
 from numpy.typing import NDArray
+from tiktoken import get_encoding
+
 from .base import TokeniserInterface
-from tiktoken import get_encoding
-from typing import Literal, Any
-from beartype import beartype
-import numpy as np
-from collections.abc import Sequence
-from numpy.typing import NDArray
-from hybrid_rag.base import TokeniserInterface
 
 
 @beartype
@@ -173,7 +168,8 @@ class TestTokeniserInterface(TokeniserInterface):
         self,
         texts: Sequence[str],
     ) -> list[Literal[1]]:
-        ...
+
+        return len(texts) * [1]
 
 
     @property

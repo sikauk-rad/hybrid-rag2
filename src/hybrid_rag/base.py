@@ -1,10 +1,14 @@
-from typing import Self
-from collections.abc import Iterable, Hashable, Sequence
+
+
 from abc import ABC, abstractmethod
-from numbers import Number
-from pathlib import Path
-from sklearn.exceptions import NotFittedError
+from collections.abc import Iterable, Sequence
 from datetime import date, datetime
+from pathlib import Path
+from typing import Self
+
+import numpy as np
+from numpy.typing import NDArray
+from sklearn.exceptions import NotFittedError
 
 
 class TextTransformer(ABC):
@@ -35,7 +39,7 @@ class TextTransformer(ABC):
         texts: Sequence[str],
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[Sequence[float | int]] | NDArray[np.number]:
         ...
 
 
@@ -45,7 +49,7 @@ class TextTransformer(ABC):
         texts: Sequence[str],
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[Sequence[float | int]] | NDArray[np.number]:
         ...
 
 
@@ -63,7 +67,7 @@ class TextTransformer(ABC):
         text: str,
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[float | int] | NDArray[np.number]:
         ...
 
 
@@ -73,7 +77,7 @@ class TextTransformer(ABC):
         text: str,
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[float | int] | NDArray[np.number]:
         ...
 
 
@@ -83,7 +87,7 @@ class TextTransformer(ABC):
         texts: Sequence[str],
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[Sequence[float | int]] | NDArray[np.number]:
         ...
 
 
@@ -93,7 +97,7 @@ class TextTransformer(ABC):
         texts: Sequence[str],
         *args,
         **kwargs,
-    ):
+    ) -> Sequence[Sequence[float | int]] | NDArray[np.number]:
         ...
 
 
@@ -105,7 +109,7 @@ class TextTransformer(ABC):
         documents,
         *args,
         **kwargs,
-    ) -> Iterable[Number]:
+    ) -> Iterable[int | float]:
         ...
 
 
@@ -117,7 +121,7 @@ class TextTransformer(ABC):
         documents,
         *args,
         **kwargs,
-    ) -> Iterable[Number]:
+    ) -> Iterable[int | float]:
         ...
 
 
@@ -148,14 +152,14 @@ class TokeniserInterface(ABC):
     def tokenise(
         self,
         text: str,
-    ) -> Sequence[Number]:
+    ) -> Sequence[int | float]:
         ...
 
     @abstractmethod
     def tokenise_multiple(
         self,
         texts: Sequence[str],
-    ) -> Sequence[Sequence[Number]]:
+    ) -> Sequence[Sequence[int | float]]:
         ...
 
     @abstractmethod
@@ -208,12 +212,16 @@ class ChatModelInterface(ABC):
         *args,
         **kwargs,
     ) -> None:
-        ...
+
+        self.token_input_limit = token_input_limit
+        self.base_model_name = base_model_name
+        self.tokeniser = tokeniser
+
 
     @abstractmethod
     def respond(
         self,
-        text: str,
+        messages,
         *args,
         **kwargs,
     ):
@@ -222,7 +230,7 @@ class ChatModelInterface(ABC):
     @abstractmethod
     async def arespond(
         self,
-        text: str,
+        messages,
         *args,
         **kwargs,
     ):

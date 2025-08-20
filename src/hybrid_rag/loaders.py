@@ -1,15 +1,18 @@
+from collections.abc import Iterable
+from itertools import groupby
+from operator import attrgetter
+from typing import Literal
+
 from beartype import beartype
 from openai import AzureOpenAI, AsyncAzureOpenAI, OpenAI, AsyncOpenAI
-from .datatypes import BaseAzureModelDetails, AzureChatModelDetails, AzureEmbeddingModelDetails
-from operator import attrgetter
+
 from .azure_interfaces import AzureChatModelInterface, AzureEmbeddingModelInterface
-from datetime import datetime
-from typing import Literal
 from .base import TokeniserInterface
+from .datatypes import BaseAzureModelDetails, AzureChatModelDetails, AzureEmbeddingModelDetails
 from .text_transformers.embedding_transformers import EmbeddingCache
 from .tokeniser_interfaces import OpenAITokeniserInterface, HuggingFaceTokeniserInterface
-from collections.abc import Iterable, Sequence
-from itertools import groupby
+
+
 
 
 @beartype
@@ -21,7 +24,9 @@ def load_tokeniser(
 
     match tokeniser_type:
         case 'tiktoken':
-            return OpenAITokeniserInterface(tokeniser)
+            return OpenAITokeniserInterface(
+                tokeniser
+            )
         case 'HuggingFace':
             return HuggingFaceTokeniserInterface(
                 tokeniser,
@@ -107,22 +112,16 @@ def load_azure_model_details_from_dicts(
     model_details: Iterable[dict],
 ) -> list[BaseAzureModelDetails]:
 
-    azure_model_details = []
-    for model_detail in model_details:
-        match model_detail['function']:
-            case 'embedding':
-                md = AzureEmbeddingModelDetails.from_dict(model_detail)
-            case 'chat':
-                md = AzureChatModelDetails.from_dict(model_detail)
-        azure_model_details.append(md)
-    return azure_model_details
+    return [BaseAzureModelDetails.from_dict_factory(
+        model_details = model_detail
+    ) for model_detail in model_details]
 
 
 @beartype
 def load_model_from_azure_model_details(
     sync_client: AzureOpenAI,
     async_client: AsyncAzureOpenAI,
-    azure_model_details: AzureChatModelDetails | AzureEmbeddingModelDetails,
+    azure_model_details: BaseAzureModelDetails,
     huggingface_token: str | None = None,
     max_cache_size: int = 100_000,
 ) -> AzureChatModelInterface | AzureEmbeddingModelInterface:
@@ -200,6 +199,6 @@ def load_clients_and_models_from_dicts(
 
     azure_model_details = load_azure_model_details_from_dicts(model_details)
     return load_clients_and_models_from_azure_model_details(
-        azure_model_details,
+        azure_model_details=azure_model_details,
         huggingface_token = huggingface_token,
     )

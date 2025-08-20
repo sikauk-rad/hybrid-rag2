@@ -1,16 +1,15 @@
-import polars as pl
-import numpy as np
-from typing import Literal
-from collections.abc import Sequence
-from beartype import beartype
-from collections.abc import Iterable
-from numbers import Number
-from .base import ChatModelInterface
-from .document_scorer import DocumentScorer
+from collections.abc import Sequence, Iterable
 from operator import itemgetter
-from .datatypes import AzureMessageType, AzureMessageCountType, Role
-from .utilities import get_allowed_history
+
+from beartype import beartype
+from llm_utilities.datatypes import AzureMessageCountType, Role
+import numpy as np
+import polars as pl
 from pydantic import BaseModel
+
+from .document_scorer import DocumentScorer
+from .azure_interfaces import AzureChatModelInterface
+from .utilities import get_allowed_history
 
 
 class StandaloneResponseStructure(BaseModel):
@@ -24,9 +23,9 @@ class RetrievalAugmentedGenerator:
     def __init__(
         self,
         *,
-        history_chat_model: ChatModelInterface,
-        question_chat_model: ChatModelInterface,
-        process_chat_model: ChatModelInterface,
+        history_chat_model: AzureChatModelInterface,
+        question_chat_model: AzureChatModelInterface,
+        process_chat_model: AzureChatModelInterface,
         document_scorer: DocumentScorer,
         history_prompts: tuple[str, str],
         question_prompts_rag: tuple[str, str, str],
@@ -91,7 +90,7 @@ class RetrievalAugmentedGenerator:
     def make_standalone_question(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         custom_history: Sequence[AzureMessageCountType] | None = None,
         use_structured_response: bool = True,
     ) -> tuple[str, bool, int]:
@@ -122,7 +121,6 @@ class RetrievalAugmentedGenerator:
         else:
             response, token_count = self.history_chat_model.respond(
                 messages = messages,
-                response_format = StandaloneResponseStructure,
                 temperature = temperature,
                 return_token_count = True,
             )
@@ -138,7 +136,7 @@ class RetrievalAugmentedGenerator:
     async def amake_standalone_question(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         custom_history: Sequence[AzureMessageCountType] | None = None,
         use_structured_response: bool = True,
     ) -> tuple[str, bool, int]:
@@ -167,9 +165,8 @@ class RetrievalAugmentedGenerator:
             response = response.augmented_standalone_user_query
 
         else:
-            response, token_count = await self.history_chat_model.respond(
+            response, token_count = await self.history_chat_model.arespond(
                 messages = messages,
-                response_format = StandaloneResponseStructure,
                 temperature = temperature,
                 return_token_count = True,
             )
@@ -185,14 +182,14 @@ class RetrievalAugmentedGenerator:
     def respond_to_standalone_question(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         n_documents: int,
-        initial_retrieval_ratio: Number,
+        initial_retrieval_ratio: int | float,
         weighted_rank_threshold: float,
-        fusion_factor: Number,
+        fusion_factor: int | float,
         rerank: bool,
-        rerank_score_threshold: Number,
+        rerank_score_threshold: int | float,
         filters: Iterable[pl.Expr] = [],
         verbose: bool = False,
         custom_history: Sequence[AzureMessageCountType] | None = None,
@@ -240,14 +237,14 @@ class RetrievalAugmentedGenerator:
     async def arespond_to_standalone_question(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         n_documents: int,
-        initial_retrieval_ratio: Number,
+        initial_retrieval_ratio: int | float,
         weighted_rank_threshold: float,
-        fusion_factor: Number,
+        fusion_factor: int | float,
         rerank: bool,
-        rerank_score_threshold: Number,
+        rerank_score_threshold: int | float,
         filters: Iterable[pl.Expr] = [],
         verbose: bool = False,
         custom_history: Sequence[AzureMessageCountType] | None = None,
@@ -295,7 +292,7 @@ class RetrievalAugmentedGenerator:
     def respond_to_standalone_question_norag(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         custom_history: Sequence[AzureMessageCountType] | None = None,
     ) -> tuple[str, int]:
@@ -324,7 +321,7 @@ class RetrievalAugmentedGenerator:
     async def arespond_to_standalone_question_norag(
         self,
         query: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         custom_history: Sequence[AzureMessageCountType] | None = None,
     ) -> tuple[str, int]:
@@ -354,7 +351,7 @@ class RetrievalAugmentedGenerator:
         self,
         query: str,
         target_language: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         custom_history: Sequence[AzureMessageCountType] | None = None,
     ) -> tuple[str, int]:
@@ -389,7 +386,7 @@ class RetrievalAugmentedGenerator:
         self,
         query: str,
         target_language: str,
-        temperature: Number,
+        temperature: int | float,
         history_token_limit: int,
         custom_history: Sequence[AzureMessageCountType] | None = None,
     ) -> tuple[str, int]:
@@ -423,21 +420,21 @@ class RetrievalAugmentedGenerator:
     def respond_to_query(
         self,
         query: str,
-        history_model_temperature: Number = 0,
+        history_model_temperature: int | float = 0,
         history_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         history_model_structured_response: bool = True,
-        question_model_temperature: Number = 0,
+        question_model_temperature: int | float = 0,
         question_model_history_token_limit: int = 1_000,
         question_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         n_documents: int = 50,
-        initial_retrieval_ratio: Number = 2., 
-        fusion_factor: Number = 1,
+        initial_retrieval_ratio: int | float = 2., 
+        fusion_factor: int | float = 1,
         weighted_rank_threshold: float = 0.001,
         filters: Iterable[pl.Expr] = [],
         rerank: bool = True,
-        rerank_score_threshold: Number = -np.inf,
+        rerank_score_threshold: int | float = -np.inf,
         process_model_target_language: str = 'British English',
-        process_model_temperature: Number = 0,
+        process_model_temperature: int | float = 0,
         process_model_history_token_limit: int = 0,
         process_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         return_token_count: bool = False,
@@ -502,21 +499,21 @@ class RetrievalAugmentedGenerator:
     async def arespond_to_query(
         self,
         query: str,
-        history_model_temperature: Number = 0,
+        history_model_temperature: int | float = 0,
         history_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         history_model_structured_response: bool = True,
-        question_model_temperature: Number = 0,
+        question_model_temperature: int | float = 0,
         question_model_history_token_limit: int = 1_000,
         question_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         n_documents: int = 50,
-        initial_retrieval_ratio: Number = 2., 
-        fusion_factor: Number = 1,
+        initial_retrieval_ratio: int | float = 2., 
+        fusion_factor: int | float = 1,
         weighted_rank_threshold: float = 0.001,
         filters: Iterable[pl.Expr] = [],
         rerank: bool = True,
-        rerank_score_threshold: Number = -np.inf,
+        rerank_score_threshold: int | float = -np.inf,
         process_model_target_language: str = 'British English',
-        process_model_temperature: Number = 0,
+        process_model_temperature: int | float = 0,
         process_model_history_token_limit: int = 0,
         process_model_custom_history:  Sequence[AzureMessageCountType] | None = None,
         return_token_count: bool = False,

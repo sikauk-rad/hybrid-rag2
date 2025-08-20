@@ -1,7 +1,5 @@
 from .base import TextTransformer, TokeniserInterface, ChatModelInterface, EmbeddingModelInterface
 from .utilities import (
-    strip_token_count,
-    strip_token_counts,
     add_token_count,
     add_token_counts,
     get_allowed_history,
@@ -20,12 +18,9 @@ from .azure_interfaces import AzureEmbeddingModelInterface, AzureChatModelInterf
 from .document_scorer import DocumentScorer
 from .retrieval_augmented_generator import RetrievalAugmentedGenerator
 from .datatypes import (
-    AzureMessageCountType, 
-    AzureMessageType,
     AzureChatModelDetails,
     AzureCrossEncoderModelDetails,
     AzureEmbeddingModelDetails,
-    Role,
 )
 
 __all__ = [
@@ -34,8 +29,6 @@ __all__ = [
     'ChatModelInterface', 
     'EmbeddingModelInterface',
 
-    'strip_token_count',
-    'strip_token_counts',
     'add_token_count',
     'add_token_counts',
     'get_allowed_history',
@@ -48,12 +41,9 @@ __all__ = [
     'load_clients_and_models_from_azure_model_details',
     'load_clients_and_models_from_dicts',
 
-    'AzureMessageCountType', 
-    'AzureMessageType',
     'AzureChatModelDetails',
     'AzureCrossEncoderModelDetails',
     'AzureEmbeddingModelDetails',
-    'Role',
 
     'OpenAITokeniserInterface', 
     'HuggingFaceTokeniserInterface',

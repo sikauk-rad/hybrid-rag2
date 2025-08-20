@@ -1,9 +1,11 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Self
+
 import numpy as np
-from sklearn.exceptions import NotFittedError
 from numpy.typing import NDArray
-from collections.abc import Sequence
+from sklearn.exceptions import NotFittedError
+
 from ..base import TextTransformer
 
 
