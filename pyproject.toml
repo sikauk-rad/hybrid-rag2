@@ -21,6 +21,7 @@ dependencies = [
   'scikit-learn>=0.21.0',
   'scipy>=1.14.0',
   'sentence_transformers',
+  'tenacity',
   'tiktoken>=0.7.0',
   'tokenizers',
   'llm_utilities @ git+https://github.com/sikauk-rad/llm-utilities.git@main',
@@ -40,6 +41,7 @@ allow-direct-references = true
 # [project.urls]
 # Homepage = "https://github.com/SikaSIS/hybrid-rag"
 # Issues = "https://github.com/SikaSIS/hybrid-rag/issues"
+
 
 
 
