@@ -23,7 +23,7 @@ dependencies = [
  'sentence_transformers',
  'tiktoken>=0.7.0',
  'tokenizers',
- 'git+git://github.com/sikauk-rad/llm-utilities.git@main#egg=llm_utilities',
+ 'llm_utilities @ git+https://github.com/sikauk-rad/llm-utilities.git@main',
 ]
 description = "Package containing useful functions for creating RAG systems, utilising embeddings, TDF-IF and BM25 keyword search."
 readme = "README.md"
@@ -37,4 +37,5 @@ classifiers = [
 # [project.urls]
 # Homepage = "https://github.com/SikaSIS/hybrid-rag"
 # Issues = "https://github.com/SikaSIS/hybrid-rag/issues"
+
 
